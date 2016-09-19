@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Game Show Buzzer</string>
+    <string name="button_setup">Setup...</string>
+    <string name="button_play">Play...</string>
+    <string name="label_host">Host Url:</string>
+    <string name="label_name">Player Name:</string>
+    <string name="button_setup_ok">OK</string>
+    <string name="button_notify">Press</string>
+</resources>
