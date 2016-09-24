@@ -31,7 +31,7 @@ public class PlayActivity extends AppCompatActivity implements View.OnTouchListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
 
-        mediaPlayer = MediaPlayer.create(this, R.raw.cowbell);
+        createMediaPlayer();
 
         Intent intent = getIntent();
         host = intent.getStringExtra(MainActivity.EXTRA_HOST);
@@ -44,8 +44,35 @@ public class PlayActivity extends AppCompatActivity implements View.OnTouchListe
     @Override
     protected void onStop() {
         super.onStop();
-        mediaPlayer.release();
-        mediaPlayer = null;
+        destroyMediaPlayer();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        destroyMediaPlayer();
+    }
+
+    private void createMediaPlayer() {
+        mediaPlayer = MediaPlayer.create(this, R.raw.cowbell);
+        mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            @Override
+            public boolean onError(MediaPlayer mp, int what, int extra) {
+                Log.v(TAG, "MediaPlayer errored.");
+                Log.v(TAG, "  what=" + what);
+                Log.v(TAG, "  extra=" + extra);
+                Log.v(TAG, "Nuking media player.");
+                destroyMediaPlayer();
+
+                return true;
+            }
+        });
+    }
+    private void destroyMediaPlayer() {
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
     }
 
     @Override
@@ -86,9 +113,11 @@ public class PlayActivity extends AppCompatActivity implements View.OnTouchListe
 
                     int responseCode = c.getResponseCode();
                     Log.v(TAG, "HTTP response code = " + responseCode);
-                    BufferedReader in = new BufferedReader(new InputStreamReader(c.getInputStream()));
+                    BufferedReader in = new BufferedReader(
+                        new InputStreamReader(c.getInputStream())
+                    );
                     String input;
-                    StringBuffer response = new StringBuffer();
+                    StringBuilder response = new StringBuilder();
 
                     while ((input = in.readLine()) != null) {
                         response.append(input);
@@ -110,7 +139,6 @@ public class PlayActivity extends AppCompatActivity implements View.OnTouchListe
             }
         }
 
-            Log.v(TAG, "sendToHost()");
         new SendToHostTask().execute(0);
     }
 
@@ -147,6 +175,10 @@ public class PlayActivity extends AppCompatActivity implements View.OnTouchListe
             }
         }
 
+        if (mediaPlayer == null) {
+            Log.v(TAG, "Re-creating media player.");
+            createMediaPlayer();
+        }
         mediaPlayer.start();
         new FlashButtonTask().execute(
             Color.BLUE, Color.GREEN, Color.RED, Color.YELLOW, Color.CYAN
